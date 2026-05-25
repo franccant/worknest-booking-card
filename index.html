@@ -95,6 +95,10 @@
     .card--active   { border-color: #1D4ED8; }
     .card--expiring { border-color: var(--warning-border); }
     .card--empty    { border: 1px dashed var(--border); align-items: center; gap: 16px; padding: 24px 14px; }
+    
+    /* Variaciones de historial desaturadas sin romper botones */
+    .card--completed .card-header, .card--completed .card-details, .card--completed .info-line { opacity: 0.85; }
+    .card--cancelled .card-header, .card--cancelled .card-details, .card--cancelled .info-line { opacity: 0.65; }
 
     /* ── Card header ──────────────────────────────────────── */
     .card-header {
@@ -244,25 +248,39 @@
       flex: 1;
       font-family: var(--font);
       font-size: 14px;
-      font-weight: 500;
-      padding: 8px;
-      border-radius: var(--radius-sm);
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
       border: 1px solid var(--border);
       background: var(--white);
       color: var(--text-primary);
       cursor: pointer;
       text-align: center;
-      transition: opacity 0.12s ease;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .btn:hover { opacity: 0.85; }
-    .btn:active { opacity: 0.7; }
+    .btn:hover { background-color: #FAFAFA; }
 
     .btn--primary {
-      background: var(--brand-primary);
-      border-color: var(--brand-primary);
-      color: var(--white);
+      background: var(--brand-primary) !important;
+      border-color: var(--brand-primary) !important;
+      color: var(--white) !important;
+    }
+    .btn--primary:hover { background: #1E40AF !important; opacity: 1; }
+
+    /* Botón Secundario Outline con tu Azul de Marca (Download receipt / View QR) */
+    .btn--secondary-outline {
+      background: var(--white) !important;
+      border: 1px solid var(--border) !important; /* El stroke que faltaba */
+      color: var(--brand-primary) !important;
+    }
+    .btn--secondary-outline:hover { 
+      background: var(--brand-primary-light) !important; 
+      border-color: #BFDBFE !important;
     }
 
     .btn--primary-amber {
@@ -274,8 +292,10 @@
     .btn--ghost {
       background: transparent;
       border-color: transparent;
-      color: var(--destructive-text);
+      color: var(--text-secondary);
+      font-weight: 500;
     }
+    .btn--ghost:hover { color: var(--destructive-text); background: var(--destructive-bg); }
 
     /* ── Empty state ──────────────────────────────────────── */
     .empty-icon-wrap {
@@ -313,12 +333,10 @@
 
   <div class="states-grid">
 
-    <!-- ── EMPTY STATE ──────────────────────────────── -->
     <div class="state-col">
       <span class="state-label">Empty state</span>
       <div class="card card--empty">
         <div class="empty-icon-wrap">
-          <!-- calendar_add_on icon -->
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10zm0-12H5V5h14v2zm-7 6h-3v-1h3V9h1v3h3v1h-3v3h-1v-3z" fill="#71717A"/>
           </svg>
@@ -326,12 +344,11 @@
         <p class="empty-title">No upcoming bookings</p>
         <p class="empty-sub">Book a space and it'll appear here.</p>
         <div class="btn-row">
-          <button class="btn">Find a space</button>
+          <button class="btn btn--primary">Find a space</button>
         </div>
       </div>
     </div>
 
-    <!-- ── UPCOMING ─────────────────────────────────── -->
     <div class="state-col">
       <span class="state-label">Upcoming</span>
       <div class="card">
@@ -345,7 +362,6 @@
 
         <div class="card-details">
           <div class="meta-row">
-            <!-- weekend/armchair icon -->
             <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M20 10V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h1.33L4 19h1l.67-2h12.67l.66 2h1l-.33-2H21v-5c0-1.1-.9-2-2-2zm-14-.5V7c0-.28.22-.5.5-.5h11c.28 0 .5.22.5.5v2.5H6zM4 12c0-.28.22-.5.5-.5s.5.22.5.5v3H4v-3zm16 3h-1v-3c0-.28.22-.5.5-.5s.5.22.5.5v3zm-2 0H6v-1.5h12V15z" fill="#71717A"/>
             </svg>
@@ -354,14 +370,12 @@
           <div class="meta-row">
             <div class="gap-16">
               <div style="display:flex;align-items:center;gap:4px;">
-                <!-- calendar icon -->
                 <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V10h16v11zm0-13H4V5h16v3z" fill="#71717A"/>
                 </svg>
                 <span>Thu Apr 25</span>
               </div>
               <div style="display:flex;align-items:center;gap:4px;">
-                <!-- schedule/clock icon -->
                 <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" fill="#71717A"/>
                 </svg>
@@ -374,13 +388,12 @@
         <hr class="separator">
 
         <div class="btn-row">
-          <button class="btn btn--primary">View QR</button>
+          <button class="btn btn--secondary-outline">View QR</button>
           <button class="btn btn--ghost">Cancel</button>
         </div>
       </div>
     </div>
 
-    <!-- ── ACTIVE ────────────────────────────────────── -->
     <div class="state-col">
       <span class="state-label">Active</span>
       <div class="card card--active">
@@ -416,13 +429,12 @@
         <hr class="separator">
 
         <div class="btn-row">
-          <button class="btn">Extend</button>
-          <button class="btn">Check out</button>
+          <button class="btn btn--secondary-outline">Extend</button>
+          <button class="btn btn--primary">Check out</button>
         </div>
       </div>
     </div>
 
-    <!-- ── EXPIRING SOON ──────────────────────────────── -->
     <div class="state-col">
       <span class="state-label">Expiring soon</span>
       <div class="card card--expiring">
@@ -464,10 +476,9 @@
       </div>
     </div>
 
-    <!-- ── COMPLETED ──────────────────────────────────── -->
     <div class="state-col">
       <span class="state-label">Completed</span>
-      <div class="card" style="opacity: 0.85;">
+      <div class="card card--completed">
         <div class="card-header">
           <div>
             <p class="card-title">WorkNest Gran Via</p>
@@ -510,15 +521,14 @@
 
         <div class="btn-row">
           <button class="btn btn--primary">Book again</button>
-          <button class="btn">Download receipt</button>
+          <button class="btn btn--secondary-outline">Download receipt</button>
         </div>
       </div>
     </div>
 
-    <!-- ── CANCELLED ───────────────────────────────────── -->
     <div class="state-col">
       <span class="state-label">Cancelled</span>
-      <div class="card" style="opacity: 0.75;">
+      <div class="card card--cancelled">
         <div class="card-header">
           <div>
             <p class="card-title card-title--cancelled">WorkNest Gran Via</p>
