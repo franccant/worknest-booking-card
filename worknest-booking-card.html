@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkNest — Booking Card States</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Design tokens (from Figma) ───────────────────────── */
+    :root {
+      --font: 'Inter', sans-serif;
+
+      /* Neutral */
+      --text-primary:    #18181B;
+      --text-secondary:  #71717A;
+      --text-disabled:   #A1A1AA;
+      --border:          #E4E4E7;
+      --card-bg:         #F4F4F5;
+      --white:           #FFFFFF;
+
+      /* Brand */
+      --brand-primary:       #1D4ED8;
+      --brand-primary-light: #EFF6FF;
+
+      /* States */
+      --warning-bg:   #FEF3C7;
+      --warning-text: #92400E;
+      --warning-border: #E7A131;
+
+      --success-bg:   #F0FDF4;
+      --success-text: #166534;
+
+      --destructive-bg:   #FEF2F2;
+      --destructive-text: #991B1B;
+
+      /* Geometry */
+      --radius-sm:   4px;
+      --radius-md:   8px;
+      --radius-pill: 12px;
+    }
+
+    /* ── Reset ────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: #F7F7F5;
+      color: var(--text-primary);
+      padding: 48px 24px;
+    }
+
+    /* ── Page header ──────────────────────────────────────── */
+    .page-header { margin-bottom: 36px; }
+    .page-header h1 {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .page-header p { font-size: 20px; font-weight: 600; }
+
+    /* ── Layout grid ──────────────────────────────────────── */
+    .states-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(361px, 1fr));
+      gap: 20px;
+      max-width: 1400px;
+    }
+
+    .state-col { display: flex; flex-direction: column; gap: 8px; }
+
+    .state-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-secondary);
+    }
+
+    /* ── Card base ────────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      padding: 14px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card--active   { border-color: #1D4ED8; }
+    .card--expiring { border-color: var(--warning-border); }
+    .card--empty    { border: 1px dashed var(--border); align-items: center; gap: 16px; padding: 24px 14px; }
+
+    /* ── Card header ──────────────────────────────────────── */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .card-title--cancelled {
+      text-decoration: line-through;
+      color: var(--text-primary);
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .card-subtitle--cancelled {
+      text-decoration: line-through;
+      color: var(--text-disabled);
+    }
+
+    /* ── Badge ────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge--upcoming    { background: var(--card-bg);           color: var(--text-primary); }
+    .badge--active      { background: var(--brand-primary-light); color: var(--brand-primary); }
+    .badge--expiring    { background: var(--warning-bg);        color: var(--warning-text); }
+    .badge--completed   { background: var(--success-bg);        color: var(--success-text); }
+    .badge--cancelled   { background: var(--destructive-bg);    color: var(--destructive-text); }
+
+    /* ── Details ──────────────────────────────────────────── */
+    .card-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+
+    .meta-row--cancelled {
+      text-decoration: line-through;
+      color: var(--text-disabled);
+    }
+
+    .meta-row .gap-16 { gap: 16px; display: flex; align-items: center; }
+
+    .meta-highlight {
+      font-weight: 400;
+      color: var(--text-primary);
+    }
+
+    .meta-time-left {
+      color: var(--text-primary);
+      font-weight: 400;
+    }
+
+    .meta-time-left--expiring { color: var(--text-primary); }
+
+    .meta-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ── Check-in confirm ─────────────────────────────────── */
+    .checkin-text {
+      color: var(--text-primary);
+      font-weight: 400;
+    }
+
+    /* ── Progress bar ─────────────────────────────────────── */
+    .progress-track {
+      height: 2px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
+
+    .progress-fill--blue   { background: var(--brand-primary); }
+    .progress-fill--amber  { background: var(--warning-border); }
+
+    /* ── Separator ────────────────────────────────────────── */
+    .separator {
+      border: none;
+      border-top: 1px solid var(--border);
+      width: 100%;
+      margin: 0;
+    }
+
+    /* ── Receipt / refund line ────────────────────────────── */
+    .info-line {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .info-line--paid   { color: var(--success-text);      font-weight: 700; }
+    .info-line--refund { color: var(--destructive-text);  font-weight: 700; }
+
+    /* ── Buttons ──────────────────────────────────────────── */
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .btn {
+      flex: 1;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--white);
+      color: var(--text-primary);
+      cursor: pointer;
+      text-align: center;
+      transition: opacity 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn:active { opacity: 0.7; }
+
+    .btn--primary {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+      color: var(--white);
+    }
+
+    .btn--primary-amber {
+      background: var(--warning-border);
+      border-color: var(--warning-border);
+      color: var(--white);
+    }
+
+    .btn--ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--destructive-text);
+    }
+
+    /* ── Empty state ──────────────────────────────────────── */
+    .empty-icon-wrap {
+      background: var(--card-bg);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .empty-sub {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="page-header">
+    <h1>WorkNest · Booking Card</h1>
+    <p>All states</p>
+  </header>
+
+  <div class="states-grid">
+
+    <!-- ── EMPTY STATE ──────────────────────────────── -->
+    <div class="state-col">
+      <span class="state-label">Empty state</span>
+      <div class="card card--empty">
+        <div class="empty-icon-wrap">
+          <!-- calendar_add_on icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10zm0-12H5V5h14v2zm-7 6h-3v-1h3V9h1v3h3v1h-3v3h-1v-3z" fill="#71717A"/>
+          </svg>
+        </div>
+        <p class="empty-title">No upcoming bookings</p>
+        <p class="empty-sub">Book a space and it'll appear here.</p>
+        <div class="btn-row">
+          <button class="btn">Find a space</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── UPCOMING ─────────────────────────────────── -->
+    <div class="state-col">
+      <span class="state-label">Upcoming</span>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <p class="card-title">WorkNest Gran Via</p>
+            <p class="card-subtitle">Gran Via, 28. Madrid · Floor 3</p>
+          </div>
+          <span class="badge badge--upcoming">Upcoming</span>
+        </div>
+
+        <div class="card-details">
+          <div class="meta-row">
+            <!-- weekend/armchair icon -->
+            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 10V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h1.33L4 19h1l.67-2h12.67l.66 2h1l-.33-2H21v-5c0-1.1-.9-2-2-2zm-14-.5V7c0-.28.22-.5.5-.5h11c.28 0 .5.22.5.5v2.5H6zM4 12c0-.28.22-.5.5-.5s.5.22.5.5v3H4v-3zm16 3h-1v-3c0-.28.22-.5.5-.5s.5.22.5.5v3zm-2 0H6v-1.5h12V15z" fill="#71717A"/>
+            </svg>
+            <span>Desk 42 · Your guaranteed spot</span>
+          </div>
+          <div class="meta-row">
+            <div class="gap-16">
+              <div style="display:flex;align-items:center;gap:4px;">
+                <!-- calendar icon -->
+                <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V10h16v11zm0-13H4V5h16v3z" fill="#71717A"/>
+                </svg>
+                <span>Thu Apr 25</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <!-- schedule/clock icon -->
+                <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" fill="#71717A"/>
+                </svg>
+                <span>10:00–14:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="separator">
+
+        <div class="btn-row">
+          <button class="btn btn--primary">View QR</button>
+          <button class="btn btn--ghost">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ACTIVE ────────────────────────────────────── -->
+    <div class="state-col">
+      <span class="state-label">Active</span>
+      <div class="card card--active">
+        <div class="card-header">
+          <div>
+            <p class="card-title">WorkNest Gran Via</p>
+            <p class="card-subtitle">Gran Via, 28. Madrid · Floor 3</p>
+          </div>
+          <span class="badge badge--active">Active</span>
+        </div>
+
+        <div class="card-details">
+          <div class="meta-row">
+            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 10V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h1.33L4 19h1l.67-2h12.67l.66 2h1l-.33-2H21v-5c0-1.1-.9-2-2-2zm-14-.5V7c0-.28.22-.5.5-.5h11c.28 0 .5.22.5.5v2.5H6zM4 12c0-.28.22-.5.5-.5s.5.22.5.5v3H4v-3zm16 3h-1v-3c0-.28.22-.5.5-.5s.5.22.5.5v3zm-2 0H6v-1.5h12V15z" fill="#71717A"/>
+            </svg>
+            <span>Desk 42</span>
+            <span class="checkin-text">Confirmed check in</span>
+          </div>
+          <div class="meta-row">
+            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" fill="#71717A"/>
+            </svg>
+            <span>10:00–14:00</span>
+            <span class="meta-time-left">2h 15m left</span>
+          </div>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill progress-fill--blue" style="width: 44%"></div>
+        </div>
+
+        <hr class="separator">
+
+        <div class="btn-row">
+          <button class="btn">Extend</button>
+          <button class="btn">Check out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EXPIRING SOON ──────────────────────────────── -->
+    <div class="state-col">
+      <span class="state-label">Expiring soon</span>
+      <div class="card card--expiring">
+        <div class="card-header">
+          <div>
+            <p class="card-title">WorkNest Gran Via</p>
+            <p class="card-subtitle">Gran Via, 28. Madrid · Floor 3</p>
+          </div>
+          <span class="badge badge--expiring">Expiring soon</span>
+        </div>
+
+        <div class="card-details">
+          <div class="meta-row">
+            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 10V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h1.33L4 19h1l.67-2h12.67l.66 2h1l-.33-2H21v-5c0-1.1-.9-2-2-2zm-14-.5V7c0-.28.22-.5.5-.5h11c.28 0 .5.22.5.5v2.5H6zM4 12c0-.28.22-.5.5-.5s.5.22.5.5v3H4v-3zm16 3h-1v-3c0-.28.22-.5.5-.5s.5.22.5.5v3zm-2 0H6v-1.5h12V15z" fill="#71717A"/>
+            </svg>
+            <span>Desk 42</span>
+            <span class="checkin-text">Confirmed check in</span>
+          </div>
+          <div class="meta-row">
+            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" fill="#71717A"/>
+            </svg>
+            <span>10:00–14:00</span>
+            <span class="meta-time-left meta-time-left--expiring">15m left</span>
+          </div>
+        </div>
+
+        <div class="progress-track">
+          <div class="progress-fill progress-fill--amber" style="width: 93%"></div>
+        </div>
+
+        <hr class="separator">
+
+        <div class="btn-row">
+          <button class="btn btn--primary-amber">Extend</button>
+          <button class="btn">Check out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COMPLETED ──────────────────────────────────── -->
+    <div class="state-col">
+      <span class="state-label">Completed</span>
+      <div class="card" style="opacity: 0.85;">
+        <div class="card-header">
+          <div>
+            <p class="card-title">WorkNest Gran Via</p>
+            <p class="card-subtitle">Gran Via, 28. Madrid · Floor 3</p>
+          </div>
+          <span class="badge badge--completed">Completed</span>
+        </div>
+
+        <div class="card-details">
+          <div class="meta-row">
+            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 10V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h1.33L4 19h1l.67-2h12.67l.66 2h1l-.33-2H21v-5c0-1.1-.9-2-2-2zm-14-.5V7c0-.28.22-.5.5-.5h11c.28 0 .5.22.5.5v2.5H6zM4 12c0-.28.22-.5.5-.5s.5.22.5.5v3H4v-3zm16 3h-1v-3c0-.28.22-.5.5-.5s.5.22.5.5v3zm-2 0H6v-1.5h12V15z" fill="#71717A"/>
+            </svg>
+            <span>Desk 42</span>
+          </div>
+          <div class="meta-row">
+            <div class="gap-16">
+              <div style="display:flex;align-items:center;gap:4px;">
+                <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V10h16v11zm0-13H4V5h16v3z" fill="#71717A"/>
+                </svg>
+                <span>Thu Apr 25</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" fill="#71717A"/>
+                </svg>
+                <span>10:00–14:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-line">
+          <span>4h · €20.00</span>
+          <span class="info-line--paid">Paid</span>
+        </div>
+
+        <hr class="separator">
+
+        <div class="btn-row">
+          <button class="btn btn--primary">Book again</button>
+          <button class="btn">Download receipt</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CANCELLED ───────────────────────────────────── -->
+    <div class="state-col">
+      <span class="state-label">Cancelled</span>
+      <div class="card" style="opacity: 0.75;">
+        <div class="card-header">
+          <div>
+            <p class="card-title card-title--cancelled">WorkNest Gran Via</p>
+            <p class="card-subtitle card-subtitle--cancelled">Gran Via, 28. Madrid · Floor 3</p>
+          </div>
+          <span class="badge badge--cancelled">Cancelled</span>
+        </div>
+
+        <div class="card-details">
+          <div class="meta-row meta-row--cancelled">
+            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 10V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v3c-1.1 0-2 .9-2 2v5h1.33L4 19h1l.67-2h12.67l.66 2h1l-.33-2H21v-5c0-1.1-.9-2-2-2zm-14-.5V7c0-.28.22-.5.5-.5h11c.28 0 .5.22.5.5v2.5H6zM4 12c0-.28.22-.5.5-.5s.5.22.5.5v3H4v-3zm16 3h-1v-3c0-.28.22-.5.5-.5s.5.22.5.5v3zm-2 0H6v-1.5h12V15z" fill="#A1A1AA"/>
+            </svg>
+            <span>Desk 42</span>
+          </div>
+          <div class="meta-row meta-row--cancelled">
+            <div class="gap-16">
+              <div style="display:flex;align-items:center;gap:4px;">
+                <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V10h16v11zm0-13H4V5h16v3z" fill="#A1A1AA"/>
+                </svg>
+                <span>Thu Apr 25</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <svg class="meta-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" fill="#A1A1AA"/>
+                </svg>
+                <span>10:00–14:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-line">
+          <span>Within 24–48h anticipation</span>
+          <span class="info-line--refund">Full refund</span>
+        </div>
+
+        <hr class="separator">
+
+        <div class="btn-row">
+          <button class="btn btn--primary">Book again</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
